@@ -103,3 +103,100 @@ create policy "client lit ses projets" on public.projects
 -- Profils : chacun voit le sien, l'admin voit tous
 create policy "lecture des profils" on public.profiles
   for select to authenticated using (id = auth.uid() or public.is_admin());
+
+-- =====================================================================
+-- 6. PAIEMENTS (déclarés par le client, confirmés par l'administrateur)
+-- =====================================================================
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid references auth.users(id) on delete set null default auth.uid(),
+  project_id uuid references public.projects(id) on delete set null,
+  montant numeric not null check (montant > 0),
+  devise text not null check (devise in ('FCFA','USD','EUR')),
+  methode text not null check (char_length(methode) between 1 and 60),
+  reference text check (reference is null or char_length(reference) <= 120),
+  code text check (code is null or char_length(code) <= 20),
+  statut text not null default 'En attente' check (statut in ('En attente','Confirmé','Refusé'))
+);
+alter table public.payments enable row level security;
+drop policy if exists "client declare un paiement" on public.payments;
+drop policy if exists "lecture des paiements" on public.payments;
+drop policy if exists "admin modifie les paiements" on public.payments;
+drop policy if exists "admin supprime les paiements" on public.payments;
+create policy "client declare un paiement" on public.payments
+  for insert to authenticated with check (user_id = auth.uid() and statut = 'En attente');
+create policy "lecture des paiements" on public.payments
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+create policy "admin modifie les paiements" on public.payments
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy "admin supprime les paiements" on public.payments
+  for delete to authenticated using (public.is_admin());
+
+-- =====================================================================
+-- 7. STATISTIQUES DE VISITE (anonymes : ni adresse IP, ni cookie)
+-- =====================================================================
+create table if not exists public.visits (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  path text check (path is null or char_length(path) <= 200),
+  lang text check (lang is null or char_length(lang) <= 10),
+  ref text check (ref is null or char_length(ref) <= 200),
+  device text check (device is null or char_length(device) <= 20)
+);
+alter table public.visits enable row level security;
+drop policy if exists "enregistrer une visite" on public.visits;
+drop policy if exists "admin lit les visites" on public.visits;
+create policy "enregistrer une visite" on public.visits
+  for insert to anon, authenticated with check (true);
+create policy "admin lit les visites" on public.visits
+  for select to authenticated using (public.is_admin());
+
+-- =====================================================================
+-- 8. MESSAGERIE (client <-> administrateur) + fichiers
+-- =====================================================================
+create table if not exists public.chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  client_id uuid not null references auth.users(id) on delete cascade,
+  sender_id uuid references auth.users(id) on delete set null default auth.uid(),
+  from_admin boolean not null default false,
+  body text check (body is null or char_length(body) <= 2000),
+  file_path text check (file_path is null or char_length(file_path) <= 300),
+  file_name text check (file_name is null or char_length(file_name) <= 200),
+  read boolean not null default false,
+  check (body is not null or file_path is not null)
+);
+create index if not exists chat_messages_client_idx on public.chat_messages (client_id, created_at);
+alter table public.chat_messages enable row level security;
+
+drop policy if exists "chat lecture" on public.chat_messages;
+drop policy if exists "chat client envoie" on public.chat_messages;
+drop policy if exists "chat admin envoie" on public.chat_messages;
+drop policy if exists "chat admin modifie" on public.chat_messages;
+drop policy if exists "chat admin supprime" on public.chat_messages;
+create policy "chat lecture" on public.chat_messages
+  for select to authenticated using (client_id = auth.uid() or public.is_admin());
+create policy "chat client envoie" on public.chat_messages
+  for insert to authenticated
+  with check (client_id = auth.uid() and from_admin = false and sender_id = auth.uid());
+create policy "chat admin envoie" on public.chat_messages
+  for insert to authenticated with check (public.is_admin() and from_admin = true);
+create policy "chat admin modifie" on public.chat_messages
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy "chat admin supprime" on public.chat_messages
+  for delete to authenticated using (public.is_admin());
+
+-- Stockage privé des fichiers (10 Mo max par fichier)
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('chat-files', 'chat-files', false, 10485760)
+on conflict (id) do nothing;
+
+drop policy if exists "chat-files lecture" on storage.objects;
+drop policy if exists "chat-files envoi" on storage.objects;
+create policy "chat-files lecture" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'chat-files' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+create policy "chat-files envoi" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'chat-files' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));

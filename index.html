@@ -109,10 +109,17 @@ details p{color:var(--muted);margin:.7rem 0 0;max-width:68ch}
 
 .tools{display:flex;gap:.5rem;align-items:center}.tools select{width:auto;background:transparent;color:inherit;border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:.15rem .3rem;font-size:.9rem}.tools option{color:#000}
 .gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}.gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+.chart{display:flex;align-items:flex-end;gap:4px;height:120px;margin-bottom:1rem}.chart div{flex:1;background:var(--brand);min-height:2px;border-radius:3px 3px 0 0}
 .hvis img,.hvis video{width:100%;height:auto;border-radius:14px;display:block}.gal video{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block;background:#000}#kM{font-size:1.2rem}
 .slider .slide{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:none;background:#000}.slider .slide.on{display:block}
 .sl-n{display:flex;justify-content:center;align-items:center;gap:.6rem;margin-top:.7rem}.sl-n button{border:0;cursor:pointer;color:inherit;background:rgba(255,255,255,.18);border-radius:50%;width:32px;height:32px;font-size:1.2rem;line-height:1}.sl-n .dot{width:11px;height:11px;padding:0;background:rgba(255,255,255,.35)}.sl-n .dot.on{background:#D9B160}
 .card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-bottom:1px solid var(--line)}
+.chat-adm{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:1rem}@media (max-width:700px){.chat-adm{grid-template-columns:1fr}}
+.chat-list button{display:block;width:100%;text-align:left;padding:.6rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;margin-bottom:.4rem;cursor:pointer;font:inherit}.chat-list button.on{border-color:var(--brand);font-weight:600}.chat-list b{background:#C0392B;color:#fff;border-radius:999px;padding:0 .45rem;font-size:.8rem;margin-left:.4rem}
+.chat-msgs{height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:.7rem;background:var(--bg);display:flex;flex-direction:column;gap:.5rem}
+.bub{max-width:80%;padding:.5rem .8rem;border-radius:12px;background:var(--surface);border:1px solid var(--line);align-self:flex-start;word-break:break-word}.bub.me{align-self:flex-end;background:var(--brand);color:var(--surface);border-color:var(--brand)}
+.bub small{display:block;opacity:.7;font-size:.75rem;margin-top:.2rem}.bub a,.bub .lk{color:inherit;text-decoration:underline;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+.chat-bar{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}.chat-bar input[type=text]{flex:1;min-width:150px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
@@ -275,6 +282,7 @@ details p{color:var(--muted);margin:.7rem 0 0;max-width:68ch}
   <div id="client" hidden>
     <h2>Mon espace client</h2>
     <p class="note" id="cw"></p>
+    <div class="panel"><h3 style="margin-bottom:1rem">Messagerie</h3><div id="chatc-b"></div></div>
     <div class="panel">
       <h3 style="margin-bottom:1rem">Mes projets</h3>
       <div class="tw"><table><thead><tr><th>Projet</th><th>Type</th><th>Montant</th><th>Avancement</th></tr></thead><tbody id="cp"></tbody></table></div>
@@ -284,6 +292,26 @@ details p{color:var(--muted);margin:.7rem 0 0;max-width:68ch}
       <h3 style="margin-bottom:1rem">Mes demandes</h3>
       <div class="tw"><table><thead><tr><th>Date</th><th>Demande</th><th>Statut</th></tr></thead><tbody id="cm"></tbody></table></div>
       <p class="note" id="cme">Vous n’avez pas encore envoyé de demande.</p>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:1rem">Effectuer un paiement</h3>
+      <form id="payf">
+        <div class="row2">
+          <label>Projet<select name="pid" id="ppid"><option value="">Autre / sans projet</option></select></label>
+          <label>Montant<input name="montant" type="number" min="1" step="any" required></label>
+          <label>Devise<select name="devise"><option>FCFA</option><option>USD</option><option>EUR</option></select></label>
+          <label>Moyen de paiement<select name="methode" id="pmeth"></select></label>
+        </div>
+        <div class="msg" id="pinfo" style="display:block"></div>
+        <label><span id="pref-t">Référence de la transaction</span><input name="reference" required maxlength="120"></label>
+        <p class="msg" id="pmsg" role="alert"></p>
+        <div><button class="btn dark" type="submit">J’ai effectué le paiement</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:1rem">Mes paiements</h3>
+      <div class="tw"><table><thead><tr><th>Date</th><th>Montant</th><th>Moyen</th><th>Statut</th></tr></thead><tbody id="ppay"></tbody></table></div>
+      <p class="note" id="ppe">Aucun paiement pour le moment.</p>
     </div>
     <div class="fbtns"><button class="btn dark" onclick="showSite();location.hash='contact'">Nouvelle demande</button><button class="btn alt" style="color:var(--ink)" onclick="showSite()">Retour au site</button><button class="btn alt" style="color:var(--ink)" id="lo2">Se déconnecter</button></div>
   </div>
@@ -295,6 +323,18 @@ details p{color:var(--muted);margin:.7rem 0 0;max-width:68ch}
       <div class="kpi"><b id="kC">0</b><span>En cours</span></div>
       <div class="kpi"><b id="kD">0</b><span>Terminés</span></div>
       <div class="kpi"><b id="kM">0</b><span>Revenu total</span></div>
+    </div>
+    <div class="panel"><h3 style="margin-bottom:1rem">Messagerie <span id="chata-n"></span></h3><div class="chat-adm"><div id="chata-l" class="chat-list"></div><div id="chata-b"><p class="note">Choisissez un client dans la liste pour discuter.</p></div></div></div>
+    <div class="panel">
+      <h3 style="margin-bottom:1rem">Analytique</h3>
+      <div class="kpis" id="an"></div>
+      <p class="note">Visites des 14 derniers jours (une visite = une session, sans cookies ni adresse IP)</p>
+      <div class="chart" id="chart"></div>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:1rem">Paiements reçus</h3>
+      <div class="tw"><table><thead><tr><th>Date</th><th>Client</th><th>Montant</th><th>Moyen</th><th>Référence</th><th>Statut</th></tr></thead><tbody id="apay"></tbody></table></div>
+      <p class="note" id="ape">Aucun paiement pour le moment. Vérifiez chaque paiement dans votre application MTN, Orange ou PayPal avant de confirmer.</p>
     </div>
     <div class="panel">
       <h3 style="margin-bottom:1rem">Messages reçus</h3>
@@ -331,6 +371,7 @@ details p{color:var(--muted);margin:.7rem 0 0;max-width:68ch}
     <div><h3>Contact</h3><a href="https://wa.me/237699293315">WhatsApp : +237 699 293 315</a><a href="tel:+237650217461">+237 650 217 461</a><a href="tel:+237695790489">+237 695 790 489</a><a href="mailto:smartgentechltd@gmail.com">smartgentechltd@gmail.com</a></div>
   </div>
   <span>© 2026 SmartGen Tech Ltd. Tous droits réservés.</span>
+  <span style="display:block;width:100%;opacity:.75">Statistiques de visite anonymes, sans cookies.</span>
 </div></footer>
 <a class="fab" href="https://wa.me/237699293315" target="_blank" rel="noopener">WhatsApp</a>
 
@@ -373,7 +414,7 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
 })();
 (function(){
   if(!sb){document.getElementById('lf').addEventListener('submit',function(e){e.preventDefault();var m=document.getElementById('lm');m.textContent='Service indisponible. Vérifiez votre connexion internet.';m.style.display='block'});return}
-  var mode='in';
+  var mode='in',CS=null,CODE='SGT-'+Math.random().toString(36).slice(2,8).toUpperCase();
   function $(i){return document.getElementById(i)}
   function lmsg(t){var m=$('lm');m.textContent=t;m.style.display=t?'block':'none'}
   function setMode(m){
@@ -384,6 +425,153 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
     $('lpw').autocomplete=up?'new-password':'current-password';if(up)$('lpw').setAttribute('minlength','8');else $('lpw').removeAttribute('minlength');lmsg('');
   }
   function status(s){return s==='Terminé'?'Terminé':s==='En cours'?'En cours':'À démarrer'}
+  
+  /* ====== PAIEMENTS (manuels, confirmés par l’admin) ======
+     Complétez "detail" (numéro, email ou adresse) pour afficher un moyen de paiement. Vide = masqué. */
+  var PAY=[
+    {id:'gateway',nom:'Carte bancaire ou Mobile Money (paiement sécurisé en ligne)',detail:'',info:'Cliquez sur le bouton pour payer sur la page sécurisée de notre prestataire de paiement. Vous ne saisissez jamais vos données de carte sur notre site.',champ:'Numéro de transaction reçu après le paiement'},
+    {id:'mtn',nom:'MTN Mobile Money',detail:'+237 650 217 461',info:'Envoyez le montant exact par MTN Mobile Money au numéro ci-dessous.',champ:'ID de transaction (reçu par SMS)'},
+    {id:'orange',nom:'Orange Money',detail:'+237 699 293 315',info:'Envoyez le montant exact par Orange Money au numéro ci-dessous.',champ:'ID de transaction (reçu par SMS)'},
+    {id:'paypal',nom:'PayPal',detail:'',info:'Envoyez le montant à l’adresse PayPal ci-dessous.',champ:'Email PayPal utilisé et ID de transaction'},
+    {id:'zelle',nom:'Zelle (États-Unis)',detail:'',info:'Envoyez le montant avec Zelle à l’email ou au numéro ci-dessous.',champ:'Nom et email utilisés pour l’envoi'},
+    {id:'venmo',nom:'Venmo (États-Unis)',detail:'',info:'Envoyez le montant sur Venmo à l’identifiant ci-dessous.',champ:'Votre identifiant Venmo et ID de transaction'},
+    {id:'btc',nom:'Bitcoin',detail:'',info:'Envoyez l’équivalent en Bitcoin à l’adresse ci-dessous (vérifiez bien l’adresse).',champ:'ID de transaction (hash)'},
+    {id:'virement',nom:'Virement bancaire / Wise',detail:'',info:'Faites le virement vers les coordonnées ci-dessous.',champ:'Référence du virement'},
+    {id:'usdt',nom:'USDT (crypto, réseau TRC20)',detail:'',info:'Envoyez uniquement des USDT sur le réseau TRC20 à l’adresse ci-dessous. Un autre réseau ferait perdre les fonds.',champ:'ID de transaction (hash)'},
+    {id:'transfert',nom:'Transfert d’argent (Western Union, MoneyGram, Remitly...)',detail:'',info:'Envoyez le montant au bénéficiaire ci-dessous, puis indiquez le code du transfert.',champ:'Code du transfert (MTCN) et pays d’envoi'}
+  ].filter(function(x){return x.detail});
+  function setInfo(){
+    var m=PAY.filter(function(x){return x.id===$('pmeth').value})[0],b=$('pinfo');b.textContent='';
+    if(!m)return;
+    var a=document.createElement('div');a.textContent=m.info;
+    var d=document.createElement('strong');d.textContent=m.detail;d.style.cssText='display:block;font-size:1.2rem;margin:.3rem 0';
+    var c=document.createElement('div');c.textContent='Code à mettre en motif ou message : '+CODE;
+    var cp=document.createElement('button');cp.type='button';cp.className='btn alt';cp.style.cssText='color:var(--ink);padding:.3rem .8rem;font-size:.9rem;margin-bottom:.5rem';cp.textContent='Copier';
+    cp.onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(m.detail).then(function(){cp.textContent='Copié ✓'},function(){})};
+    b.appendChild(a);
+    if(m.detail.indexOf('https://')===0){var lk=document.createElement('a');lk.href=m.detail;lk.target='_blank';lk.rel='noopener';lk.className='btn';lk.style.margin='.5rem 0';lk.textContent='Payer en ligne';b.appendChild(lk)}else{b.appendChild(d);b.appendChild(cp)}
+    b.appendChild(c);$('pref-t').textContent=m.champ;
+  }
+  (function(){
+    var s=$('pmeth');PAY.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.nom;s.appendChild(o)});
+    s.onchange=setInfo;setInfo();
+    $('payf').addEventListener('submit',async function(e){
+      e.preventDefault();var pm=$('pmsg'),d=new FormData(e.target);
+      if(!CS||!PAY.length){return}
+      var m=PAY.filter(function(x){return x.id===d.get('methode')})[0];
+      var r=await sb.from('payments').insert({user_id:CS.user.id,project_id:d.get('pid')||null,montant:Number(d.get('montant')),devise:d.get('devise'),methode:m?m.nom:d.get('methode'),reference:d.get('reference'),code:CODE});
+      pm.style.display='block';
+      if(r.error){pm.textContent='Envoi impossible. Réessayez ou contactez-nous sur WhatsApp.'}
+      else{pm.textContent='Paiement déclaré. Nous le confirmons dès réception.';e.target.reset();loadClient(CS)}
+    });
+  })();
+  function stl(s){return s==='Confirmé'?'Confirmé':s==='Refusé'?'Refusé':'En attente'}
+  async function clientPay(s,ps){
+    var sel=$('ppid'),keep=sel.value;sel.textContent='';
+    var o0=document.createElement('option');o0.value='';o0.textContent='Autre / sans projet';sel.appendChild(o0);
+    ps.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.titre;sel.appendChild(o)});sel.value=keep;
+    var r=await sb.from('payments').select('*').order('created_at',{ascending:false}),tb=$('ppay'),l=r.data||[];tb.textContent='';
+    l.forEach(function(x){var tr=document.createElement('tr');tr.appendChild(td(new Date(x.created_at).toLocaleDateString('fr-FR')));tr.appendChild(td(fm(x.montant)+' '+x.devise));tr.appendChild(td(x.methode));tr.appendChild(td(stl(x.statut)));tb.appendChild(tr)});
+    $('ppe').style.display=l.length?'none':'block';
+  }
+  function kpi(l,v){var d=document.createElement('div');d.className='kpi';var b=document.createElement('b');b.textContent=v;var s=document.createElement('span');s.textContent=l;d.appendChild(b);d.appendChild(s);return d}
+  function dkey(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  async function adminExtra(ms,ps,prof){
+    PROF=prof;adminChat(prof);
+    var since=new Date(Date.now()-30*864e5).toISOString();
+    var v=await sb.from('visits').select('created_at,device').gte('created_at',since).order('created_at',{ascending:false}).limit(5000);
+    var tot=await sb.from('visits').select('id',{count:'exact',head:true});
+    var pr2=await sb.from('payments').select('*').order('created_at',{ascending:false});
+    var rows=v.data||[],pays=pr2.data||[],days=[],map={},i,n7=0,mob=0;
+    for(i=13;i>=0;i--){var dd=new Date();dd.setDate(dd.getDate()-i);var k=dkey(dd);days.push(k);map[k]=0}
+    rows.forEach(function(x){var k=dkey(new Date(x.created_at));if(k in map){map[k]++;if(days.indexOf(k)>=7)n7++}if(x.device==='mobile')mob++});
+    var accounts=prof.filter(function(u){return u.email!==ADMIN}).length,cl={};ps.forEach(function(x){if(x.client_id)cl[x.client_id]=1});
+    var sum={};pays.forEach(function(x){if(x.statut==='Confirmé')sum[x.devise]=(sum[x.devise]||0)+Number(x.montant)});
+    var an=$('an');an.textContent='';
+    [['Visites (total)',tot.count||0],['Visites (7 derniers jours)',n7],['Visites sur mobile (30 j)',rows.length?Math.round(100*mob/rows.length)+' %':'0 %'],['Comptes créés',accounts],['Clients avec projet',Object.keys(cl).length],['Demandes reçues',ms.length],['Paiements confirmés',Object.keys(sum).map(function(k){return fm(sum[k])+' '+k}).join(' · ')||'0']].forEach(function(x){an.appendChild(kpi(x[0],x[1]))});
+    var mx=Math.max.apply(null,days.map(function(k){return map[k]}).concat([1])),ch=$('chart');ch.textContent='';
+    days.forEach(function(k){var b=document.createElement('div');b.style.height=Math.round(100*map[k]/mx)+'%';b.title=k+' : '+map[k]+' visite(s)';ch.appendChild(b)});
+    var who={};prof.forEach(function(u){who[u.id]=(u.nom?u.nom+' – ':'')+u.email});
+    var tb=$('apay');tb.textContent='';
+    pays.forEach(function(x){
+      var tr=document.createElement('tr');
+      tr.appendChild(td(new Date(x.created_at).toLocaleDateString('fr-FR')));tr.appendChild(td(who[x.user_id]||'—'));
+      tr.appendChild(td(fm(x.montant)+' '+x.devise));tr.appendChild(td(x.methode));tr.appendChild(td((x.reference||'')+' ['+(x.code||'')+']'));
+      var s=document.createElement('select');s.setAttribute('aria-label','Statut');
+      ['En attente','Confirmé','Refusé'].forEach(function(o){var op=document.createElement('option');op.textContent=o;if(o===x.statut)op.selected=true;s.appendChild(op)});
+      s.onchange=async function(){await sb.from('payments').update({statut:s.value}).eq('id',x.id);adminExtra(ms,ps,prof)};
+      tr.appendChild(cell(s));tb.appendChild(tr);
+    });
+    $('ape').style.display=pays.length?'none':'block';
+  }
+
+  /* ====== MESSAGERIE ====== */
+  var CHAT={cid:null,admin:false,list:null,t:null,n:-1},PROF=[];
+  function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e}
+  function stopChat(){clearInterval(CHAT.t);CHAT.t=null;CHAT.cid=null;CHAT.list=null;CHAT.n=-1}
+  function notify(t){try{if(document.hidden){if(document.title.indexOf('● ')!==0)document.title='● '+document.title;if(window.Notification&&Notification.permission==='granted')new Notification('SmartGen Tech',{body:t})}}catch(e){}}
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)document.title=document.title.replace(/^● /,'')});
+  async function send(o){
+    var s=await sb.auth.getSession(),u=s.data.session.user;
+    var r=await sb.from('chat_messages').insert(Object.assign({client_id:CHAT.cid,from_admin:CHAT.admin,sender_id:u.id},o));
+    if(!r.error)chatLoad();return r;
+  }
+  function call(v){
+    var u='https://meet.jit.si/SmartGenTech-'+CHAT.cid.replace(/-/g,'')+(v?'':'#config.startWithVideoMuted=true');
+    window.open(u,'_blank','noopener');send({body:(v?'CALL_VIDEO:':'CALL_AUDIO:')+u});
+  }
+  async function chatLoad(){
+    var ms=CHAT.list;if(!CHAT.cid||!ms)return;
+    var r=await sb.from('chat_messages').select('*').eq('client_id',CHAT.cid).order('created_at',{ascending:true}).limit(300),l=r.data||[];
+    if(l.length===CHAT.n)return;
+    var first=CHAT.n<0,last=l[l.length-1];CHAT.n=l.length;ms.textContent='';
+    l.forEach(function(x){
+      var b=mk('div','bub'+(x.from_admin===CHAT.admin?' me':''));
+      if(x.file_path){var f=mk('button','lk','📎 '+x.file_name);f.type='button';f.onclick=async function(){var u=await sb.storage.from('chat-files').createSignedUrl(x.file_path,3600);if(u.data)window.open(u.data.signedUrl,'_blank','noopener')};b.appendChild(f)}
+      else if(/^CALL_(VIDEO|AUDIO):https:\/\/meet\.jit\.si\/SmartGenTech-/.test(x.body||'')){var v=x.body.indexOf('CALL_VIDEO')===0,a=mk('a','',v?'Rejoindre l’appel vidéo':'Rejoindre l’appel audio');a.href=x.body.slice(x.body.indexOf(':')+1);a.target='_blank';a.rel='noopener';b.appendChild(a)}
+      else b.appendChild(document.createTextNode(x.body||''));
+      b.appendChild(mk('small','',new Date(x.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})));
+      ms.appendChild(b);
+    });
+    ms.scrollTop=ms.scrollHeight;
+    if(!first&&last&&last.from_admin!==CHAT.admin)notify(last.file_path?'Nouveau fichier reçu':(last.body||'').indexOf('CALL_')===0?'Appel entrant':last.body);
+    if(CHAT.admin)sb.from('chat_messages').update({read:true}).eq('client_id',CHAT.cid).eq('from_admin',false).eq('read',false).then(function(){adminChat(PROF)});
+  }
+  function chatOpen(box,cid,adm){
+    stopChat();CHAT.cid=cid;CHAT.admin=adm;box.textContent='';
+    var tl=mk('div','chat-bar');tl.style.marginTop='0';
+    [['Appel vidéo',true],['Appel audio',false]].forEach(function(x){var b=mk('button','btn alt',x[0]);b.type='button';b.style.cssText='color:var(--ink);padding:.35rem .9rem;font-size:.9rem';b.onclick=function(){call(x[1])};tl.appendChild(b)});
+    var ms=mk('div','chat-msgs');ms.setAttribute('aria-live','polite');ms.style.marginTop='.6rem';CHAT.list=ms;
+    var fm2=mk('form','chat-bar'),inp=mk('input');inp.type='text';inp.maxLength=2000;inp.placeholder='Votre message…';inp.setAttribute('aria-label','Message');
+    var fb=mk('button','btn alt','📎 Fichier'),fi=mk('input');fb.type='button';fb.style.color='var(--ink)';fi.type='file';fi.hidden=true;fi.accept='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.zip';
+    var sd=mk('button','btn dark','Envoyer');sd.type='submit';
+    fb.onclick=function(){fi.click()};
+    fi.onchange=async function(){
+      var f=fi.files[0];fi.value='';if(!f)return;
+      if(f.size>10*1024*1024){alert('Fichier trop lourd (10 Mo maximum).');return}
+      var path=cid+'/'+Date.now()+'-'+f.name.replace(/[^A-Za-z0-9._-]/g,'_');
+      var up=await sb.storage.from('chat-files').upload(path,f,{contentType:f.type||'application/octet-stream'});
+      if(up.error){alert('Envoi du fichier impossible.');return}
+      send({file_path:path,file_name:f.name.slice(0,200)});
+    };
+    fm2.onsubmit=function(e){e.preventDefault();var t=inp.value.trim();if(!t)return;inp.value='';
+      if(window.Notification&&Notification.permission==='default')Notification.requestPermission();
+      send({body:t})};
+    fm2.appendChild(inp);fm2.appendChild(fb);fm2.appendChild(fi);fm2.appendChild(sd);
+    box.appendChild(tl);box.appendChild(ms);box.appendChild(fm2);
+    chatLoad();CHAT.t=setInterval(function(){chatLoad();if(CHAT.admin)adminChat(PROF)},6000);
+  }
+  async function adminChat(prof){
+    var r=await sb.from('chat_messages').select('client_id,created_at,read,from_admin').order('created_at',{ascending:false}).limit(1000),st={},tot=0;
+    (r.data||[]).forEach(function(x){var s=st[x.client_id]||(st[x.client_id]={un:0,t:x.created_at});if(!x.from_admin&&!x.read){s.un++;tot++}});
+    var l=$('chata-l');l.textContent='';
+    prof.filter(function(u){return u.email!==ADMIN}).sort(function(a,b){return((st[b.id]||{}).t||'').localeCompare((st[a.id]||{}).t||'')}).forEach(function(u){
+      var b=mk('button',CHAT.cid===u.id?'on':'',u.nom||u.email);b.type='button';
+      if(st[u.id]&&st[u.id].un)b.appendChild(mk('b','',String(st[u.id].un)));
+      b.onclick=function(){chatOpen($('chata-b'),u.id,true);adminChat(prof)};l.appendChild(b);
+    });
+    $('chata-n').textContent=tot?'('+tot+' nouveau'+(tot>1?'x':'')+')':'';
+  }
   async function loadClient(s){
     $('cw').textContent='Connecté : '+s.user.email;
     var m=await sb.from('messages').select('*').order('created_at',{ascending:false});
@@ -393,6 +581,8 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
     ms.forEach(function(x){var tr=document.createElement('tr');tr.appendChild(td(new Date(x.created_at).toLocaleDateString('fr-FR')));tr.appendChild(td((x.service||'')+' — '+x.message));tr.appendChild(td(x.traite?'Traité':'Reçu'));mb.appendChild(tr)});
     ps.forEach(function(x){var tr=document.createElement('tr');tr.appendChild(td(x.titre));tr.appendChild(td(x.type));tr.appendChild(td(fm(x.montant)+' '+(x.devise||'FCFA')));tr.appendChild(td(status(x.statut)));pb.appendChild(tr)});
     $('cme').style.display=ms.length?'none':'block';$('cpe').style.display=ps.length?'none':'block';
+    clientPay(s,ps);
+    if(CHAT.cid!==s.user.id||!$('chatc-b').firstChild)chatOpen($('chatc-b'),s.user.id,false);
   }
   async function loadAdmin(){
     var m=await sb.from('messages').select('*').order('created_at',{ascending:false});
@@ -429,8 +619,10 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
     });
     $('kN').textContent=nn;$('kT').textContent=ps.length;$('kC').textContent=c;$('kD').textContent=dn;$('kM').textContent=Object.keys(rev).map(function(k){return fm(rev[k])+' '+k}).join(' · ')||'0';
     $('mempty').style.display=ms.length?'none':'block';$('empty').style.display=ps.length?'none':'block';
+    adminExtra(ms,ps,pr.data||[]);
   }
   function view(s){
+    CS=s;if(!s)stopChat();
     var adm=!!(s&&s.user&&s.user.email===ADMIN);
     $('login').hidden=!!s;$('dash').hidden=!adm;$('client').hidden=!(s&&!adm);
     if(s){
@@ -476,7 +668,7 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
   });
 })();
 (function(){
-  var D={"Mot de passe":"Password","Afficher le mot de passe":"Show password","Mot de passe oublié ?":"Forgot your password?","Service indisponible. Vérifiez votre connexion internet.":"Service unavailable. Please check your internet connection.","Entrez d’abord votre email, puis cliquez sur « Mot de passe oublié ? ».":"Enter your email first, then click “Forgot your password?”.","Email de réinitialisation envoyé. Ouvrez votre boîte email (et les courriers indésirables).":"Reset email sent. Check your inbox (and your spam folder).","Méthode": "Process", "Questions": "FAQ", "Mon espace": "My account", "pour faire grandir votre entreprise.": "to grow your business.", "SmartGen Tech Ltd, à Yaoundé, crée vos sites web, applications mobiles et plateformes sur mesure, de la conception à la mise en ligne.": "SmartGen Tech Ltd, based in Yaoundé, builds custom websites, mobile apps and platforms, from design to launch.", "Écrire sur WhatsApp": "Message us on WhatsApp", "Voir nos services": "See our services", "Basés à Yaoundé": "Based in Yaoundé", "Devis gratuit": "Free quote", "Réponse rapide sur WhatsApp": "Fast replies on WhatsApp", "Support après livraison": "Support after delivery", "Nos services": "Our services", "Une seule équipe pour toute la chaîne : interface, serveur, base de données et mise en production.": "One team for the whole chain: interface, server, database and deployment.", "Sites web sur mesure": "Custom websites", "Sites vitrines et sites d’entreprise rapides, clairs et lisibles sur téléphone.": "Fast, clear business websites that read well on a phone.", "Applications mobiles": "Mobile apps", "Applications pour vos clients et vos équipes, prêtes pour Android et iPhone.": "Apps for your customers and your teams, ready for Android and iPhone.", "Applications Full Stack": "Full Stack applications", "Outils de gestion complets, de l’interface à la base de données.": "Complete management tools, from the interface to the database.", "Solutions e-commerce": "E-commerce solutions", "Boutiques en ligne avec catalogue, commandes et paiement.": "Online shops with catalog, orders and payment.", "API et bases de données": "APIs and databases", "Connexion de vos outils entre eux et gestion sûre de vos données.": "Connecting your tools together and keeping your data safe.", "Des solutions complètes": "Complete solutions", "Trois types de projets que nous livrons régulièrement.": "Three types of projects we deliver regularly.", "Développement web": "Web development", "Du site simple à l’application web complète avec espace client.": "From a simple site to a full web app with a client area.", "Tableaux de bord, suivi d’activité et commandes dans la poche de vos utilisateurs.": "Dashboards, activity tracking and orders in your users’ pockets.", "Plateformes SaaS": "SaaS platforms", "Services en ligne par abonnement, avec comptes, facturation et administration.": "Subscription-based online services with accounts, billing and administration.", "Ce que nous pouvons créer pour vous": "What we can build for you", "Trois exemples de projets types. Chaque réalisation est dessinée selon votre activité et votre image.": "Three typical project examples. Each one is designed around your business and your image.", "Site vitrine": "Showcase website", "Présentez votre entreprise, vos services et vos contacts, avec un design à votre image.": "Present your company, services and contact details with a design that fits your brand.", "Boutique en ligne": "Online shop", "Catalogue, panier, commandes et paiement par Mobile Money ou carte.": "Catalog, cart, orders and payment by Mobile Money or card.", "Tableau de bord et SaaS": "Dashboard and SaaS", "Suivez vos clients, vos ventes et votre activité depuis un seul écran.": "Track your customers, sales and activity from a single screen.", "Nos réalisations": "Our work", "Quelques projets livrés à nos clients.": "A few projects delivered to our clients.", "Notre équipe": "Our team", "Comment nous travaillons": "How we work", "Un déroulement simple, pour que vous sachiez toujours où en est votre projet.": "A simple process so you always know where your project stands.", "Échange": "Discussion", "Nous écoutons votre besoin et vos objectifs.": "We listen to your needs and goals.", "Devis": "Quote", "Vous recevez un prix et un délai clairs avant tout démarrage.": "You get a clear price and deadline before we start.", "Développement": "Development", "Nous construisons et vous montrons l’avancement régulièrement.": "We build and show you progress regularly.", "Mise en ligne et suivi": "Launch and follow-up", "Nous publions, vous formons et restons disponibles.": "We publish, train you and stay available.", "Technologies modernes": "Modern technologies", "Nous utilisons des outils éprouvés pour que votre solution reste fiable et évolutive.": "We use proven tools so your solution stays reliable and scalable.", "Interface web": "Web interface", "PWA (application web installable)": "PWA (installable web app)", "Serveur (backend)": "Server (backend)", "PHP et Laravel": "PHP and Laravel", "Bases de données": "Databases", "Cloud et DevOps": "Cloud and DevOps", "Git et GitHub": "Git and GitHub", "API et paiement": "APIs and payments", "Intelligence artificielle": "Artificial intelligence", "Intégration d’IA": "AI integration", "Automatisation": "Automation", "Questions fréquentes": "Frequently asked questions", "Les réponses aux questions que nos clients posent le plus souvent.": "Answers to the questions our clients ask most often.", "Combien coûte un site web ?": "How much does a website cost?", "Le prix dépend du nombre de pages et des fonctions voulues. Envoyez-nous votre besoin : nous vous répondons avec un devis gratuit.": "The price depends on the number of pages and the features you want. Send us your needs and we will reply with a free quote.", "En combien de temps mon projet sera-t-il prêt ?": "How long until my project is ready?", "Un site vitrine prend généralement quelques semaines. Une application sur mesure demande plus de temps : nous fixons le délai avec vous dans le devis.": "A showcase site usually takes a few weeks. A custom application takes longer: we agree the deadline with you in the quote.", "Mon site s’affichera-t-il bien sur téléphone ?": "Will my site look good on a phone?", "Oui. Tous nos sites sont conçus pour s’adapter aux téléphones, tablettes et ordinateurs.": "Yes. All our sites are built to adapt to phones, tablets and computers.", "Proposez-vous un suivi après la livraison ?": "Do you offer support after delivery?", "Oui. Nous assurons la maintenance, les mises à jour et l’assistance après la mise en ligne.": "Yes. We handle maintenance, updates and support after launch.", "Comment vous contacter le plus vite ?": "What is the fastest way to reach you?", "Par WhatsApp au +237 699 293 315. Vous pouvez aussi remplir le formulaire ci-dessous.": "By WhatsApp on +237 699 293 315. You can also fill in the form below.", "Parlons de votre projet": "Let’s talk about your project", "Basés à Yaoundé, au Cameroun, nous répondons rapidement par WhatsApp, téléphone ou email.": "Based in Yaoundé, Cameroon, we reply quickly by WhatsApp, phone or email.", "WhatsApp et téléphone": "WhatsApp and phone", "Téléphone": "Phone", "Nom complet": "Full name", "Téléphone / WhatsApp": "Phone / WhatsApp", "Email (facultatif)": "Email (optional)", "Service souhaité": "Service needed", "Site web sur mesure": "Custom website", "Application mobile": "Mobile app", "Application Full Stack": "Full Stack application", "API / Base de données": "API / Database", "Plateforme SaaS": "SaaS platform", "Autre": "Other", "Budget approximatif": "Approximate budget", "Montants en dollars et euros indicatifs : 1 € = 656 FCFA (taux fixe), 1 $ ≈ 580 FCFA (taux variable).": "Dollar and euro amounts are indicative: €1 = 656 FCFA (fixed rate), $1 ≈ 580 FCFA (variable rate).", "Décrivez votre projet": "Describe your project", "Vos informations servent uniquement à répondre à votre demande.": "Your information is used only to answer your request.", "Envoyer le message": "Send message", "Envoyer sur WhatsApp": "Send on WhatsApp", "Envoyer par email": "Send by email", "Envoi impossible pour le moment. Utilisez WhatsApp ou email.": "Sending is not possible right now. Please use WhatsApp or email.", "Le message n’a pas pu être envoyé. Écrivez-nous sur WhatsApp au +237 699 293 315.": "Your message could not be sent. Please write to us on WhatsApp at +237 699 293 315.", "Merci ! Votre message est bien reçu. Nous vous répondons très vite.": "Thank you! We have received your message and will reply very soon.", "WhatsApp s’ouvre avec votre message prêt à envoyer. Appuyez sur Envoyer pour terminer.": "WhatsApp opens with your message ready. Tap Send to finish.", "Votre application email s’ouvre avec votre message. Appuyez sur Envoyer pour terminer.": "Your email app opens with your message. Tap Send to finish.", "Connectez-vous ou créez un compte pour suivre vos demandes et vos projets.": "Sign in or create an account to follow your requests and projects.", "Mot de passe (8 caractères minimum)": "Password (8 characters minimum)", "Se connecter": "Sign in", "Créer un compte": "Create an account", "Créer mon compte": "Create my account", "J’ai déjà un compte": "I already have an account", "Retour au site": "Back to site", "Mon espace client": "My client area", "Mes projets": "My projects", "Projet": "Project", "Montant": "Amount", "Avancement": "Progress", "Aucun projet pour le moment. Dès que votre projet démarre, il apparaît ici.": "No projects yet. As soon as your project starts, it appears here.", "Mes demandes": "My requests", "Demande": "Request", "Statut": "Status", "Vous n’avez pas encore envoyé de demande.": "You have not sent any request yet.", "Nouvelle demande": "New request", "Se déconnecter": "Sign out", "Cet email a déjà un compte. Connectez-vous.": "This email already has an account. Please sign in.", "Compte créé. Ouvrez l’email de confirmation que nous venons d’envoyer, cliquez sur le lien, puis connectez-vous.": "Account created. Open the confirmation email we just sent, click the link, then sign in.", "Confirmez d’abord votre email avec le lien reçu.": "Please confirm your email first using the link you received.", "Email ou mot de passe incorrect.": "Incorrect email or password.", "Terminé": "Completed", "En cours": "In progress", "À démarrer": "Not started", "Reçu": "Received", "Traité": "Handled", "Solutions Full Stack": "Full Stack solutions", "Yaoundé, Cameroun": "Yaoundé, Cameroon", "Navigation": "Navigation", "© 2026 SmartGen Tech Ltd. Tous droits réservés.": "© 2026 SmartGen Tech Ltd. All rights reserved."},PRE={'Connecté : ':'Signed in: ','Création impossible : ':'Could not create account: ','Connexion impossible : ':'Sign-in failed: '},R={},cur='FCFA';
+  var D={"Messagerie":"Messaging","Envoyer":"Send","Appel vidéo":"Video call","Appel audio":"Audio call","Rejoindre l’appel vidéo":"Join the video call","Rejoindre l’appel audio":"Join the audio call","Payer en ligne":"Pay online","Copier":"Copy","Copié ✓":"Copied ✓","Effectuer un paiement":"Make a payment","Autre / sans projet":"Other / no project","Devise":"Currency","Moyen de paiement":"Payment method","Référence de la transaction":"Transaction reference","J’ai effectué le paiement":"I have made the payment","Mes paiements":"My payments","Moyen":"Method","Aucun paiement pour le moment.":"No payments yet.","Statistiques de visite anonymes, sans cookies.":"Anonymous visit statistics, no cookies.","Paiement déclaré. Nous le confirmons dès réception.":"Payment reported. We will confirm it as soon as we receive it.","Envoi impossible. Réessayez ou contactez-nous sur WhatsApp.":"Could not send. Please try again or contact us on WhatsApp.","En attente":"Pending","Confirmé":"Confirmed","Refusé":"Declined","Mot de passe":"Password","Afficher le mot de passe":"Show password","Mot de passe oublié ?":"Forgot your password?","Service indisponible. Vérifiez votre connexion internet.":"Service unavailable. Please check your internet connection.","Entrez d’abord votre email, puis cliquez sur « Mot de passe oublié ? ».":"Enter your email first, then click “Forgot your password?”.","Email de réinitialisation envoyé. Ouvrez votre boîte email (et les courriers indésirables).":"Reset email sent. Check your inbox (and your spam folder).","Méthode": "Process", "Questions": "FAQ", "Mon espace": "My account", "pour faire grandir votre entreprise.": "to grow your business.", "SmartGen Tech Ltd, à Yaoundé, crée vos sites web, applications mobiles et plateformes sur mesure, de la conception à la mise en ligne.": "SmartGen Tech Ltd, based in Yaoundé, builds custom websites, mobile apps and platforms, from design to launch.", "Écrire sur WhatsApp": "Message us on WhatsApp", "Voir nos services": "See our services", "Basés à Yaoundé": "Based in Yaoundé", "Devis gratuit": "Free quote", "Réponse rapide sur WhatsApp": "Fast replies on WhatsApp", "Support après livraison": "Support after delivery", "Nos services": "Our services", "Une seule équipe pour toute la chaîne : interface, serveur, base de données et mise en production.": "One team for the whole chain: interface, server, database and deployment.", "Sites web sur mesure": "Custom websites", "Sites vitrines et sites d’entreprise rapides, clairs et lisibles sur téléphone.": "Fast, clear business websites that read well on a phone.", "Applications mobiles": "Mobile apps", "Applications pour vos clients et vos équipes, prêtes pour Android et iPhone.": "Apps for your customers and your teams, ready for Android and iPhone.", "Applications Full Stack": "Full Stack applications", "Outils de gestion complets, de l’interface à la base de données.": "Complete management tools, from the interface to the database.", "Solutions e-commerce": "E-commerce solutions", "Boutiques en ligne avec catalogue, commandes et paiement.": "Online shops with catalog, orders and payment.", "API et bases de données": "APIs and databases", "Connexion de vos outils entre eux et gestion sûre de vos données.": "Connecting your tools together and keeping your data safe.", "Des solutions complètes": "Complete solutions", "Trois types de projets que nous livrons régulièrement.": "Three types of projects we deliver regularly.", "Développement web": "Web development", "Du site simple à l’application web complète avec espace client.": "From a simple site to a full web app with a client area.", "Tableaux de bord, suivi d’activité et commandes dans la poche de vos utilisateurs.": "Dashboards, activity tracking and orders in your users’ pockets.", "Plateformes SaaS": "SaaS platforms", "Services en ligne par abonnement, avec comptes, facturation et administration.": "Subscription-based online services with accounts, billing and administration.", "Ce que nous pouvons créer pour vous": "What we can build for you", "Trois exemples de projets types. Chaque réalisation est dessinée selon votre activité et votre image.": "Three typical project examples. Each one is designed around your business and your image.", "Site vitrine": "Showcase website", "Présentez votre entreprise, vos services et vos contacts, avec un design à votre image.": "Present your company, services and contact details with a design that fits your brand.", "Boutique en ligne": "Online shop", "Catalogue, panier, commandes et paiement par Mobile Money ou carte.": "Catalog, cart, orders and payment by Mobile Money or card.", "Tableau de bord et SaaS": "Dashboard and SaaS", "Suivez vos clients, vos ventes et votre activité depuis un seul écran.": "Track your customers, sales and activity from a single screen.", "Nos réalisations": "Our work", "Quelques projets livrés à nos clients.": "A few projects delivered to our clients.", "Notre équipe": "Our team", "Comment nous travaillons": "How we work", "Un déroulement simple, pour que vous sachiez toujours où en est votre projet.": "A simple process so you always know where your project stands.", "Échange": "Discussion", "Nous écoutons votre besoin et vos objectifs.": "We listen to your needs and goals.", "Devis": "Quote", "Vous recevez un prix et un délai clairs avant tout démarrage.": "You get a clear price and deadline before we start.", "Développement": "Development", "Nous construisons et vous montrons l’avancement régulièrement.": "We build and show you progress regularly.", "Mise en ligne et suivi": "Launch and follow-up", "Nous publions, vous formons et restons disponibles.": "We publish, train you and stay available.", "Technologies modernes": "Modern technologies", "Nous utilisons des outils éprouvés pour que votre solution reste fiable et évolutive.": "We use proven tools so your solution stays reliable and scalable.", "Interface web": "Web interface", "PWA (application web installable)": "PWA (installable web app)", "Serveur (backend)": "Server (backend)", "PHP et Laravel": "PHP and Laravel", "Bases de données": "Databases", "Cloud et DevOps": "Cloud and DevOps", "Git et GitHub": "Git and GitHub", "API et paiement": "APIs and payments", "Intelligence artificielle": "Artificial intelligence", "Intégration d’IA": "AI integration", "Automatisation": "Automation", "Questions fréquentes": "Frequently asked questions", "Les réponses aux questions que nos clients posent le plus souvent.": "Answers to the questions our clients ask most often.", "Combien coûte un site web ?": "How much does a website cost?", "Le prix dépend du nombre de pages et des fonctions voulues. Envoyez-nous votre besoin : nous vous répondons avec un devis gratuit.": "The price depends on the number of pages and the features you want. Send us your needs and we will reply with a free quote.", "En combien de temps mon projet sera-t-il prêt ?": "How long until my project is ready?", "Un site vitrine prend généralement quelques semaines. Une application sur mesure demande plus de temps : nous fixons le délai avec vous dans le devis.": "A showcase site usually takes a few weeks. A custom application takes longer: we agree the deadline with you in the quote.", "Mon site s’affichera-t-il bien sur téléphone ?": "Will my site look good on a phone?", "Oui. Tous nos sites sont conçus pour s’adapter aux téléphones, tablettes et ordinateurs.": "Yes. All our sites are built to adapt to phones, tablets and computers.", "Proposez-vous un suivi après la livraison ?": "Do you offer support after delivery?", "Oui. Nous assurons la maintenance, les mises à jour et l’assistance après la mise en ligne.": "Yes. We handle maintenance, updates and support after launch.", "Comment vous contacter le plus vite ?": "What is the fastest way to reach you?", "Par WhatsApp au +237 699 293 315. Vous pouvez aussi remplir le formulaire ci-dessous.": "By WhatsApp on +237 699 293 315. You can also fill in the form below.", "Parlons de votre projet": "Let’s talk about your project", "Basés à Yaoundé, au Cameroun, nous répondons rapidement par WhatsApp, téléphone ou email.": "Based in Yaoundé, Cameroon, we reply quickly by WhatsApp, phone or email.", "WhatsApp et téléphone": "WhatsApp and phone", "Téléphone": "Phone", "Nom complet": "Full name", "Téléphone / WhatsApp": "Phone / WhatsApp", "Email (facultatif)": "Email (optional)", "Service souhaité": "Service needed", "Site web sur mesure": "Custom website", "Application mobile": "Mobile app", "Application Full Stack": "Full Stack application", "API / Base de données": "API / Database", "Plateforme SaaS": "SaaS platform", "Autre": "Other", "Budget approximatif": "Approximate budget", "Montants en dollars et euros indicatifs : 1 € = 656 FCFA (taux fixe), 1 $ ≈ 580 FCFA (taux variable).": "Dollar and euro amounts are indicative: €1 = 656 FCFA (fixed rate), $1 ≈ 580 FCFA (variable rate).", "Décrivez votre projet": "Describe your project", "Vos informations servent uniquement à répondre à votre demande.": "Your information is used only to answer your request.", "Envoyer le message": "Send message", "Envoyer sur WhatsApp": "Send on WhatsApp", "Envoyer par email": "Send by email", "Envoi impossible pour le moment. Utilisez WhatsApp ou email.": "Sending is not possible right now. Please use WhatsApp or email.", "Le message n’a pas pu être envoyé. Écrivez-nous sur WhatsApp au +237 699 293 315.": "Your message could not be sent. Please write to us on WhatsApp at +237 699 293 315.", "Merci ! Votre message est bien reçu. Nous vous répondons très vite.": "Thank you! We have received your message and will reply very soon.", "WhatsApp s’ouvre avec votre message prêt à envoyer. Appuyez sur Envoyer pour terminer.": "WhatsApp opens with your message ready. Tap Send to finish.", "Votre application email s’ouvre avec votre message. Appuyez sur Envoyer pour terminer.": "Your email app opens with your message. Tap Send to finish.", "Connectez-vous ou créez un compte pour suivre vos demandes et vos projets.": "Sign in or create an account to follow your requests and projects.", "Mot de passe (8 caractères minimum)": "Password (8 characters minimum)", "Se connecter": "Sign in", "Créer un compte": "Create an account", "Créer mon compte": "Create my account", "J’ai déjà un compte": "I already have an account", "Retour au site": "Back to site", "Mon espace client": "My client area", "Mes projets": "My projects", "Projet": "Project", "Montant": "Amount", "Avancement": "Progress", "Aucun projet pour le moment. Dès que votre projet démarre, il apparaît ici.": "No projects yet. As soon as your project starts, it appears here.", "Mes demandes": "My requests", "Demande": "Request", "Statut": "Status", "Vous n’avez pas encore envoyé de demande.": "You have not sent any request yet.", "Nouvelle demande": "New request", "Se déconnecter": "Sign out", "Cet email a déjà un compte. Connectez-vous.": "This email already has an account. Please sign in.", "Compte créé. Ouvrez l’email de confirmation que nous venons d’envoyer, cliquez sur le lien, puis connectez-vous.": "Account created. Open the confirmation email we just sent, click the link, then sign in.", "Confirmez d’abord votre email avec le lien reçu.": "Please confirm your email first using the link you received.", "Email ou mot de passe incorrect.": "Incorrect email or password.", "Terminé": "Completed", "En cours": "In progress", "À démarrer": "Not started", "Reçu": "Received", "Traité": "Handled", "Solutions Full Stack": "Full Stack solutions", "Yaoundé, Cameroun": "Yaoundé, Cameroon", "Navigation": "Navigation", "© 2026 SmartGen Tech Ltd. Tous droits réservés.": "© 2026 SmartGen Tech Ltd. All rights reserved."},PRE={'Connecté : ':'Signed in: ','Création impossible : ':'Could not create account: ','Connexion impossible : ':'Sign-in failed: '},R={},cur='FCFA';
   for(var k in D)R[D[k]]=k;
   window.L='fr';
   var h1=document.querySelector('.hero h1'),h1fr=h1.innerHTML,h1en='Full Stack <em>solutions</em> to grow your business.';
@@ -583,6 +775,7 @@ function cell(el){var c=document.createElement('td');c.appendChild(el);return c}
     });
   });
 })();
+try{if(sb&&!sessionStorage.getItem('sg_v')){sessionStorage.setItem('sg_v','1');sb.from('visits').insert({path:location.pathname.slice(0,200),lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,200),device:/Mobi|Android/i.test(navigator.userAgent)?'mobile':'ordinateur'}).then(function(){},function(){})}}catch(e){}
 if(location.hash==='#admin')showAdmin();
 </script>
 </body>
